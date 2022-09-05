@@ -1,13 +1,25 @@
 ---
 title: "About"
-image: profile.jpg
+image: pic.png
 about:
-  template: jolla
+  template: trestles
   links:
     - icon: github
       text: Github
-      href: https://github.com/etc5523-2022
+      href: https://github.com/etc5523-2022/blog-PhuongThanhTrinh
 
 ---
 
-This is a blog template for the ETC5523 Communicating with Data assessment at Monash University.
+## Author
+
+**Phuong Thanh Trinh**
+
+## Education
+
+**Monash University|Melbourne, Victoria**
+
+Master of Business Analytics|Feb 2022 - Dec 2023
+
+## About the blog
+
+This is a blog exploring the Ramen Ratings dataset for the ETC5523 Communicating with Data assessment at Monash University.

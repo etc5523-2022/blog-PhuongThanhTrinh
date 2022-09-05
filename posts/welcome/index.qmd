@@ -1,12 +1,13 @@
 ---
-title: "Welcome To My Blog Template"
-author: "Emi Tanaka"
-date: "2022-07-18"
-categories: [news]
+title: "Welcome To My Blog"
+author: "Phuong Thanh Trinh"
+date: "2022-09-02"
+categories: [News]
 ---
 
-This is the first post in a Quarto blog. Welcome!
+Welcome to My Blog! This is an exploration of ramen ratings on a global scale. 
 
-![](thumbnail.jpg)
+![](analysis.jfif)
+
 
 

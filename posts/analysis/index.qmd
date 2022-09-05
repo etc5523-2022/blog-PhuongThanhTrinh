@@ -1,0 +1,213 @@
+---
+title: "Ramen review exploratory analysis"
+author: "Phuong Thanh Trinh"
+date: "2022-09-02"
+categories: [Analysis]
+image: "image.jfif"
+---
+
+## Purpose
+
+* Computing summary statistics to explore the difference viewes towards various types of ramen and to understand if there is any particular factor that can make a brand ramen better than another
+* Construct interactive table using `DT` package for best way to communicate the data
+* Create graphs using `ggplot2` and `plotly`
+
+## Data description 
+
+```{r, echo = FALSE, message = FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(DT)
+library(plotly)
+library(visdat)
+library(broom)
+```
+
+```{r, message = FALSE, warning=FALSE}
+ramen_ratings <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv")
+```
+
+* The data used for this assessment is the `ramen_rating.csv` data set, originated from the [Ramen Rater](https://www.theramenrater.com/resources-2/the-list/) - a product review website for ramen enthusiast.
+
+* This dataset provides more than 3,000 reviews on over 400 ramen brands on selected countries across the globe. Each record in the data set represents a single ramen review. The dataset contains 6 variables, including:
+
+4 categorical variables:
+
+  - brand: Brand of the ramen
+
+  - variety: The ramen variety, e.g., a flavor, style, ingredient
+
+  - style: Style of container (cup, pack, tray)
+
+  - country: Origin country of the ramen brand
+
+2 numeric variables:
+
+  - review_number: Ramen review number
+
+  - stars: Rating of the ramen ranging from 0-5 (5 is best, 0 is worst)
+
+## Data exploration
+
+In this blog, we will use the statistics provided in the data set to conduct an analysis about the performance of existing ramen brands and understand how different characteristics can play a part in this. 
+
+*Let's first try to clean the dataset:* 
+
+* `stars` is the most important variable in the data set as it contains information about the ramen quality. However, we can see that there are some missing observations presented in the variable. Hence it is imperative that we handle these values before jumping into the analysis:
+
+```{r, echo=FALSE, message = FALSE, warning = FALSE}
+vis_miss(ramen_ratings)
+```
+
+We will filter out all missing values in the `stars` variable:
+
+```{r}
+ramen_ratings <- ramen_ratings %>%
+  filter(stars != is.na(stars))
+```
+
+* Secondly, it is noticeable that in the column `country`, there are several countries that are either named incorrectly, duplicated or shortened so it can be a little misleading. I have renamed these values to the corresponding names, shown as below:
+
+```{r, message = FALSE, warning=FALSE}
+ramen_ratings <- ramen_ratings %>%
+  mutate(country = ifelse(country == "Sarawak", "Malaysia", country),
+         country = ifelse(country == "USA", "United States", country),
+         country = ifelse(country == "UK", "United Kingdom", country), 
+         country = ifelse(country == "Phlippines", "Philippines", country),
+         country = ifelse(country == "Holland", "Netherlands", country))
+```
+
+### Analysis
+
+With our data cleaned up, we can start our visualization. We'll begin with a summary table. 
+
+The following is used to compute the mean, minimum, maximum and median values for all the ramen categories that are available in each country, then store the calculated values in a neatly table format using `DT` package. 
+
+```{r}
+ramen_ratings %>%
+  rename(Country = country) %>%
+  group_by(Country) %>%
+  summarise(Average = mean(stars),
+            Min = min(stars),
+            Median = median(stars),
+            Max = max(stars)) %>%
+  datatable(options = list(paging = TRUE)) %>%
+  formatRound(columns = c("Min", "Average", "Median", "Max"), digits = 1) 
+```
+The table shows a list of the countries that different ramen brands come from. This is quite surprised me seeing how diverse the ramen origins are from all over the world. Furthermore, contrast to the common belief, Japan does not rank top over the best ramen in the world. In fact, Cambodia, France and Malaysia take over the place with an average rating of 4.2, whereas in Japan, the rate is only 3.9.
+
+Are you curious which brand has the most varieties among all? Adding the below code to help answer this question. 
+
+Before we can use `ggplot` to create the bar chart, I have done some data transformation. I have counted the number of varieties according to brand, and rank them in a descending order to find out the top 10 most popular ramen brand.
+
+```{r, message=FALSE, warning=FALSE}
+brands <- ramen_ratings %>%
+  count(brand) %>%
+  mutate(Rank = rank(-n)) %>%
+  filter(Rank <= 10) %>%
+  mutate_if(is.numeric, round, digits = 2)
+```
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(brands, aes(x = n, 
+                   y = reorder(brand, n))) +
+  geom_col(color = "black", fill = "#669933") +
+  geom_col(data = ~filter(.x, brand == "Nissin"),
+           fill = "#FFCC66") +
+  geom_text(aes(label = n), hjust = 1.25, color = "black") +
+  labs(x = "Number of ramen", y = "Ramen brand") +
+  theme_bw()+
+  ggtitle("Figure 2. Number of ramen varieties based on brands")
+
+```
+
+From the figure, we see that **Nissin** seems to have the highest number of varieties among all, followed by **Nongshim** and **Maruchan**. 
+
+Now that we know which brand has the most varieties, do you also want to know which brand has the worst ramen ratings in the data?
+
+The histogram below shows the distribution of ramen brands being rated from a 5-score scale. 
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(ramen_ratings, aes(x = stars)) +
+  geom_histogram(color = "purple", fill = "purple", alpha = 0.2, bins = 20, aes(y = stat(density))) +
+  geom_density(color = "purple", fill = "purple", alpha = 0.2) +
+  labs(x = "Rating", y = "Number of ramen brands") +
+  ggtitle("Histogram of ratings across brands")
+```
+
+It can be seen that the distribution of ratings is quite left-skewed. This means we are more likely to get better ramen than bad ones. On average, the rating score is `r mean(ramen_ratings$stars)`. Therefore ramen brands that are rated lower than 3 stars seems to have worse quality compared to the others. Let's find out which brands fall under this category: 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+worst <- ramen_ratings %>%
+  filter(stars < 3) %>%
+  group_by(brand) %>%
+  count(brand) %>%
+  arrange(-n) %>%
+  head(5) %>%
+  kableExtra::kable(col.names = c("Brand", "Number of ramen"), caption = "Top 5 brand with worst rated ramen")
+worst
+```
+
+Surprisingly, **Nissin** and **Maruchan** rank highest in the list with 31 and 18 worst rated ramen varieties respectively. However, my assumption is that since these brands have a diversity of ramen varieties, this is not enough to consider these are the worst ramen brands. 
+
+As per proportion-wise, there are only `r 31/442*100`% ramen from  **Nissin** and `r 18/104*100`% ramen from **Maruchan** in the worst ramen list. In order to make a more accurate conclusion, it is better to compare the proportion to other brands' proportion as well. 
+
+Further analysis, I want to explore whether the ramen origin can affect the rating on a particular brand. To do this, I have grouped countries by continent and calculate the number of stars for each continent. I have also added a linear line to test if there is a linear relationship between the two variables. 
+
+```{r, message=FALSE, warning=FALSE}
+asia <- c("Russia", "Thailand", "Japan", "Taiwan", "South Korea", "Hong Kong", "Malaysia", "China", "Philippines", "Vietnam", "Bangladesh", "Singapore", "Indonesia", "India", "Pakistan", "Nepal", "Myanmar", "Cambodia", "Dubai")
+
+europe <- c("France", "Ukraine", "Netherlands", "Italy", "Poland", "Germany", "Hungary", "United Kingdom", "Finland", "Sweden", "Estonia")
+
+oceania <- c("Australia", "New Zealand", "Fiji")
+
+africa <- c("Nigeria", "Ghana")
+
+america <- c("Canada", "United States", "Brazil", "Mexico", "Colombia")
+```
+
+```{r, message=FALSE, warning=FALSE}
+corr <- ramen_ratings %>%
+  mutate(continent = case_when(
+    country %in% asia ~ "Asia",
+    country %in% europe ~ "Europe",
+    country %in% oceania ~ "Oceania",
+    country %in% america ~ "America",
+    country %in% africa ~ "Africa")) 
+
+
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+corr <- corr %>%
+  group_by(continent) 
+```
+
+
+
+```{r, message=FALSE, warning=FALSE}
+g <- ggplot(corr, aes(y = stars, x = continent)) +
+  geom_point(aes(color = continent)) +
+  scale_colour_brewer(palette = "Dark2") +
+  ggtitle("Count of ratings based on continent")
+
+ggplotly(g)
+```
+
+
+
+```{r}
+corr_tidy <- tidy(a) 
+corr_tidy
+```
+
+
+
+
+
+
+There seems to be not a linear relationship between ramen origin and the ratings. There are a lot of points stayed below and above the linear line. Especially, Ramen is very popular and highly preferred food in Asian countries like Japan,China and South Korea, etc. Exceptions are USA and UK. We can say that migration of people from Asian countries to USA and UK is high and that has resulted in high Ramen Consumption in those 2 countries. 
+
+
