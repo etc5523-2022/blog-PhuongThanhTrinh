@@ -1,17 +1,15 @@
 ---
-title: "Ramen Review Exploratory Analysis"
+title: "Ramen Analysis"
 author: "Phuong Thanh Trinh"
-date: "2022-09-02"
+date: "2022-09-06"
 categories: [Analysis]
-image: "image.jfif"
+image: "eating.jpg"
 ---
 
 ## Purpose
 
 * Computing summary statistics to explore the performance of existing ramen brands and to understand if there is any particular factor that can make a ramen better than another
-
 * Construct interactive table using `DT` package for best way to communicate the data
-
 * Create graphs using `ggplot2` and `plotly`
 
 ## Data description 
@@ -66,7 +64,7 @@ ramen_ratings <- ramen_ratings %>%
   filter(stars != is.na(stars))
 ```
 
-* We also observed two missing observations in the `style` variable. I searched for the two brands and they appears to belong to the `pack` style, so I will replace the missing values with the associated style for these two
+* We also observed two missing observations in the `style` variable. I did some research for two variaties and they appeared to be stored in `pack` style, so I have replaced the missing values with the associated style for these two:
 
 ```{r, echo=FALSE, message = FALSE, warning = FALSE}
 ramen_ratings %>%
@@ -114,9 +112,9 @@ ramen_ratings %>%
 ```
 The @fig-summary shows a list of the countries that different ramen brands come from. This is quite surprised me seeing how diverse the ramen origins are. Furthermore, contrast to the common belief, Japan does not rank top over the best ramen in the world. In fact, Cambodia, France and Malaysia take over the place with an average rating of 4.2, whereas in Japan, the rate is only 3.9.
 
-Are you curious which brand has the most varieties among all? Adding the below code to help answer this question. 
+*Are you curious which brand has the most varieties among all?*
 
-Before we can use `ggplot` to create the bar chart, I have done some data transformation. I have counted the number of varieties according to brand, and rank them in a descending order to find out the top 10 most popular ramen brand.
+To help answer this question, I have done some data transformation. I have counted the number of varieties according to brand, and ranked them in a descending order to find out the top 10 most popular ramen brand.
 
 ```{r, message=FALSE, warning=FALSE}
 brands <- ramen_ratings %>%
@@ -141,10 +139,11 @@ ggplot(brands, aes(x = reorder(brand, -n),
 
 ```
 
-From @fig-brands, we see that **Nissin** is having the highest number of varieties among all, followed by **Nongshim** and **Maruchan**. I have done some little research and found out that **Nissin** is Japan's No.1 cup-type instant noodles brand and is available in around 100 countries and regions around the world (Nissin, n.d).
+From @fig-brands, we see that **Nissin** is having the highest number of varieties among all, followed by **Nongshim** and **Maruchan**. I have done some little research and found out that **Nissin** is Japan's No.1 cup-type instant noodles brand and is currently available in around 100 countries and regions around the world (Nissin, n.d).
 
+![](nissin.jpg)
 
-Now that we know which brand has the most varieties, do you also want to know which brand has the worst ramen ratings in the data?
+*Now that we know which brand has the most varieties, do you also want to know which brand has the worst ramen ratings in the data?*
 
 The histogram below shows the distribution of ramen brands being rated from a 5-score scale. 
 
@@ -181,7 +180,7 @@ Surprisingly, as shown in @tbl-top5, **Nissin** again ranks highest in the list 
 
 As per proportion-wise, there are only `r 31/442*100`% ramen from  **Nissin** in the worst ramen list. In order to make a more accurate conclusion, perhaps it is better to compare the proportion to other brands' proportion as well. 
 
-Further analysis, I want to explore whether how different people from different continent prefer a ramen according to styles. There are 8 styles of ramen in the dataset: `r unique(ramen_ratings$style)`
+Further analysis, I want to explore how people from different continent prefer a ramen according to styles. There are 8 styles of ramen in the dataset: `r unique(ramen_ratings$style)`.
 
 To do this, I have grouped countries by continent and calculated the number of stars for each continent.
 
@@ -195,9 +194,7 @@ oceania <- c("Australia", "New Zealand", "Fiji")
 africa <- c("Nigeria", "Ghana")
 
 america <- c("Canada", "United States", "Brazil", "Mexico", "Colombia")
-```
 
-```{r}
 corr <- ramen_ratings %>%
   mutate(continent = case_when(
     country %in% asia ~ "Asia",
@@ -229,51 +226,29 @@ g <- ggplot(corr, aes(x = style, y = mean)) +
 ggplotly(g)
 ```
 
-From @fig-comparison, it is quite obvious that different continent prefers different kinds of ramen styles, except for African region where ramen comes only in `Pack`. Asian people prefers ramen in a `box`, while Europeans and people in Australia and New Zealand likes ramen in a `bowl`. One interesting observation is the diversity of ramen styles in America continent, which is even more various than Asian countries. My hyposthesis is that many people migrating from Asian countries to these areas also bring along their culture and perhaps, adjust the origin version to fit with the new culture. That's why we have seen diverse ramen styles in these countries. 
+From @fig-comparison, it is quite obvious that different continent prefers different kinds of ramen styles, except for African region where ramen comes only in `Pack`. Asian people prefers ramen in a `box`, while Europeans and people from Australia and New Zealand likes ramen in a `bowl`. One interesting observation is the diversity of ramen styles in America continent, which is even more various than Asian countries. My hypothesis is that many people migrating from Asian countries to these areas also bring along their culture and perhaps, adjust the origin version to fit with the new culture. That's why we have seen diverse ramen styles in these countries. 
 
-This has ended my ramen rating blog! Hope you enjoy it. 
+To summarise, in this blog, I have compared and contrasted the rating score across a variety of ramen brands, as well as explore how people from different continent favors ramen based on its styles. 
 
-# References
 
-C. Sievert. Interactive Web-Based Data Visualization with R, plotly,
-  and shiny. Chapman and Hall/CRC Florida, 2020.
+## References
+
+C. Sievert. Interactive Web-Based Data Visualization with R,    plotly, and shiny. Chapman and Hall/CRC Florida, 2020.
 
 H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
   Springer-Verlag New York, 2016.
 
-Hao Zhu (2021). kableExtra: Construct
-  Complex Table with 'kable' and Pipe
-  Syntax. R package version 1.3.4.
-  https://CRAN.R-project.org/package=kableExtra
+Hao Zhu (2021). kableExtra: Construct Complex Table with     'kable' and Pipe Syntax. R package version 1.3.4.   https://CRAN.R-project.org/package=kableExtra
   
 Nissin (n.d). Brands. Retrieved from [https://www.nissin.com/en_jp/brands/](https://www.nissin.com/en_jp/brands/)
 
-Tierney N (2017). “visdat: Visualising
-Whole Data Frames.” _JOSS_, *2*(16),
-355. doi: 10.21105/joss.00355 (URL:
-https://doi.org/10.21105/joss.00355),
-<URL:
-http://dx.doi.org/10.21105/joss.00355>.
+Tierney N (2017). “visdat: Visualising Whole Data Frames.” _JOSS_, *2*(16), 355. doi: 10.21105/joss.00355 (URL: https://doi.org/10.21105/joss.00355), <URL: http://dx.doi.org/10.21105/joss.00355>.
 
 The Ramen Rater (2022). *Ramen Ratings*[Dataset]. [https://www.theramenrater.com/resources-2/the-list/](https://www.theramenrater.com/resources-2/the-list/)
 
-Wickham H, Averick M, Bryan J, Chang W,
-McGowan LD, François R, Grolemund G,
-Hayes A, Henry L, Hester J, Kuhn M,
-Pedersen TL, Miller E, Bache SM, Müller
-K, Ooms J, Robinson D, Seidel DP, Spinu
-V, Takahashi K, Vaughan D, Wilke C, Woo
-K, Yutani H (2019). “Welcome to the
-tidyverse.” _Journal of Open Source
-Software_, *4*(43), 1686. doi:
-10.21105/joss.01686 (URL:
-https://doi.org/10.21105/joss.01686).
+Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43), 1686. doi: 10.21105/joss.01686 (URL: https://doi.org/10.21105/joss.01686).
 
-Yihui Xie, Joe Cheng and Xianying Tan
-  (2022). DT: A Wrapper of the
-  JavaScript Library 'DataTables'. R
-  package version 0.24.
-  https://CRAN.R-project.org/package=DT
+Yihui Xie, Joe Cheng and Xianying Tan (2022). DT: A Wrapper of the JavaScript Library 'DataTables'. R package version 0.24. https://CRAN.R-project.org/package=DT
 
 ```{r, echo=FALSE }
 sessioninfo::session_info()

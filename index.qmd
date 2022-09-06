@@ -2,8 +2,10 @@
 title: "ETC5523 Blog Assessment"
 listing:
   contents: posts
-  sort: "date desc"
+  sort: "date asc"
   type: default
+  grid-columns: 2
+  fields: [image, date, title, author, categories, description, reading-time]
   categories: true
   sort-ui: false
   filter-ui: false

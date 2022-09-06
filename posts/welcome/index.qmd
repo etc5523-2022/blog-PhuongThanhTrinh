@@ -7,7 +7,8 @@ categories: [News]
 
 Welcome to My Blog! This is an exploration of ramen ratings on a global scale. 
 
-![](analysis.jfif)
+![](pic.JPG)
+
 
 
 

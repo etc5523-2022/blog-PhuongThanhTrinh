@@ -10,7 +10,9 @@ website:
         href: https://github.com/etc5523-2022/blog-PhuongThanhTrinh
 format:
   html:
-    theme: minty
+    theme: simplex
+    mainfont: "Roboto"
+    fontcolor: "black"
     css: styles.css
 
 
