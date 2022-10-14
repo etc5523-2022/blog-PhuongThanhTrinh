@@ -1,65 +1,65 @@
 [
   {
-    "objectID": "posts/week01/index.html",
-    "href": "posts/week01/index.html",
-    "title": "Basic communication theory and practice",
+    "objectID": "posts/analysis/index.html",
+    "href": "posts/analysis/index.html",
+    "title": "Ramen Analysis",
     "section": "",
-    "text": "Basic communication theory and its relevancy with communicating with data\nDemonstrate communication competency by selecting appropriate behaviour based on audience and self monitoring\nIdentify and apply rhetorical elements to improve data storytelling\nClearly articulate and express technical problems for others to help you"
+    "text": "Computing summary statistics to explore the performance of existing ramen brands and to understand if there is any particular factor that can make a ramen better than another\nConstruct interactive table using DT package for best way to communicate the data\nCreate graphs using ggplot2 and plotly"
   },
   {
-    "objectID": "posts/week01/index.html#slides",
-    "href": "posts/week01/index.html#slides",
-    "title": "Basic communication theory and practice",
-    "section": "Slides",
-    "text": "Slides"
+    "objectID": "posts/analysis/index.html#data-description",
+    "href": "posts/analysis/index.html#data-description",
+    "title": "Ramen Analysis",
+    "section": "Data description",
+    "text": "Data description\n\n\n\n\nramen_ratings <- readr::read_csv(\"https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-06-04/ramen_ratings.csv\")\n\n\nThe data used for this assessment is the ramen_rating.csv data set, originated from the Ramen Rater - a product review website for ramen enthusiast.\nThis dataset provides more than 3,000 reviews on over 400 ramen brands on selected countries across the globe. Each record in the data set represents a single ramen review. The dataset contains 6 variables, including:\n\n4 categorical variables:\n\nbrand: Brand of the ramen\nvariety: The ramen variety, e.g., a flavor, style, ingredient\nstyle: Style of container (cup, pack, tray)\ncountry: Origin country of the ramen brand\n\n2 numeric variables:\n\nreview_number: Ramen review number\nstars: Rating of the ramen ranging from 0-5 (5 is best, 0 is worst)\n\nLet’s first try to clean the dataset:\n\nstars is the most important variable in the data set as it contains information about the ramen quality. However, we can see that there are some missing observations presented in the variable. Hence it is imperative that we handle these values before jumping into the analysis:\n\n\n\n\n\n\nWe will filter out all missing values in the stars variable:\n\nramen_ratings <- ramen_ratings %>%\n  filter(stars != is.na(stars))\n\n\nWe also observed two missing observations in the style variable. I did some research for two variaties and they appeared to be stored in pack style, so I have replaced the missing values with the associated style for these two:\n\n\n\n\n\n \n  \n    review_number \n    brand \n    variety \n    style \n    country \n    stars \n  \n \n\n  \n    428 \n    Kamfen \n    E Menm Chicken \n    NA \n    China \n    3.75 \n  \n  \n    138 \n    Unif \n    100 Furong Shrimp \n    NA \n    Taiwan \n    3.00 \n  \n\n\n\n\n\n\nramen_ratings <- ramen_ratings %>%\n  mutate(style = ifelse(is.na(style), \"Pack\", style))\n\n\nMoreover, it is noticeable that in the column country, there are several countries that are either named incorrectly, duplicated or shortened so it can be a little misleading. I have renamed these values to the corresponding names, shown as below:\n\n\nramen_ratings <- ramen_ratings %>%\n  mutate(country = ifelse(country == \"Sarawak\", \"Malaysia\", country),\n         country = ifelse(country == \"USA\", \"United States\", country),\n         country = ifelse(country == \"UK\", \"United Kingdom\", country), \n         country = ifelse(country == \"Phlippines\", \"Philippines\", country),\n         country = ifelse(country == \"Holland\", \"Netherlands\", country))"
+  },
+  {
+    "objectID": "posts/analysis/index.html#data-analysis",
+    "href": "posts/analysis/index.html#data-analysis",
+    "title": "Ramen Analysis",
+    "section": "Data Analysis",
+    "text": "Data Analysis\nWe’ll begin with a summary table.\nThe following is used to compute the mean, minimum, maximum and median values for all the ramen categories that are available in each country, then store the calculated values in a neatly table format using DT package.\n\nramen_ratings %>%\n  rename(Country = country) %>%\n  group_by(Country) %>%\n  summarise(Average = mean(stars),\n            Min = min(stars),\n            Median = median(stars),\n            Max = max(stars)) %>%\n  datatable(options = list(paging = TRUE)) %>%\n  formatRound(columns = c(\"Country\", \"Average\", \"Min\", \"Median\", \"Max\"), digits = 1)\n\n\n\n\n\nFigure 1: Ramen ratings across countries\n\n\n\nThe Figure 1 shows a list of the countries that different ramen brands come from. This is quite surprised me seeing how diverse the ramen origins are. Furthermore, contrast to the common belief, Japan does not rank top over the best ramen in the world. In fact, Cambodia, France and Malaysia take over the place with an average rating of 4.2, whereas in Japan, the rate is only 3.9.\nAre you curious which brand has the most varieties among all?\nTo help answer this question, I have done some data transformation. I have counted the number of varieties according to brand, and ranked them in a descending order to find out the top 10 most popular ramen brand.\n\nbrands <- ramen_ratings %>%\n  count(brand) %>%\n  mutate(Rank = rank(-n)) %>%\n  filter(Rank <= 10) %>%\n  mutate_if(is.numeric, round, digits = 2)\n\n\nggplot(brands, aes(x = reorder(brand, -n), \n                   y = n)) +\n  geom_col(color = \"black\", fill = \"#FFF9EC\") +\n  geom_col(data = ~filter(.x, brand == \"Nissin\"),\n           fill = \"#FFAF03\") +\n  geom_text(aes(label = n), hjust = 0.5, vjust = 1.5, color = \"black\") +\n  labs(x = \"Ramen brand\", y = \"Number of ramen\") +\n  theme_bw()\n\n\n\n\nFigure 2: Number of ramen varieties based on brands\n\n\n\n\nFrom Figure 2, we see that Nissin is having the highest number of varieties among all, followed by Nongshim and Maruchan. I have done some little research and found out that Nissin is Japan’s No.1 cup-type instant noodles brand and is currently available in around 100 countries and regions around the world (Nissin, n.d).\n\nNow that we know which brand has the most varieties, do you also want to know which brand has the worst ramen ratings in the data?\nThe histogram below shows the distribution of ramen brands being rated from a 5-score scale.\n\nggplot(ramen_ratings, aes(x = stars)) +\n  geom_histogram(color = \"purple\", fill = \"purple\", alpha = 0.2, bins = 20, aes(y = stat(density))) +\n  geom_density(color = \"purple\", fill = \"purple\", alpha = 0.2) +\n  labs(x = \"Rating\", y = \"Number of ramen brands\") \n\n\n\n\nFigure 3: Distribution of ratings across brands\n\n\n\n\nIt can be seen that in Figure 3, the distribution of ratings is quite left-skewed. This means we are more likely to get better ramen than bad ones. On average, the rating score is 3.7. Therefore, ramen brands that are rated lower than 3 stars seem to have worse quality compared to the others. Let’s find out which brands fall under this category:\n\n\n\n\nTable 1:  Top 5 brands with worst rated ramen \n \n  \n    Brand \n    Count \n  \n \n\n  \n    Nissin \n    31 \n  \n  \n    Maruchan \n    18 \n  \n  \n    Mr. Noodles \n    13 \n  \n  \n    Vifon \n    13 \n  \n  \n    Mama \n    12 \n  \n\n\n\n\n\n\nSurprisingly, as shown in Table 1, Nissin again ranks highest in the list with 31 worst rated ramen varieties. However, my assumption is that since the brand has a diversity of ramen ranges, this is not enough to consider it is the worst ramen brand.\nAs per proportion-wise, there are only 7.0135747% ramen from Nissin in the worst ramen list. In order to make a more accurate conclusion, perhaps it is better to compare the proportion to other brands’ proportion as well.\nFurther analysis, I want to explore how people from different continent prefer a ramen according to styles. There are 8 styles of ramen in the dataset: Cup, Pack, Tray, Bowl, Box, Restaurant, Can, Bar.\nTo do this, I have grouped countries by continent and calculated the number of stars for each continent.\n\nasia <- c(\"Russia\", \"Thailand\", \"Japan\", \"Taiwan\", \"South Korea\", \"Hong Kong\", \"Malaysia\", \"China\", \"Philippines\", \"Vietnam\", \"Bangladesh\", \"Singapore\", \"Indonesia\", \"India\", \"Pakistan\", \"Nepal\", \"Myanmar\", \"Cambodia\", \"Dubai\")\n\neurope <- c(\"France\", \"Ukraine\", \"Netherlands\", \"Italy\", \"Poland\", \"Germany\", \"Hungary\", \"United Kingdom\", \"Finland\", \"Sweden\", \"Estonia\")\n\noceania <- c(\"Australia\", \"New Zealand\", \"Fiji\")\n\nafrica <- c(\"Nigeria\", \"Ghana\")\n\namerica <- c(\"Canada\", \"United States\", \"Brazil\", \"Mexico\", \"Colombia\")\n\ncorr <- ramen_ratings %>%\n  mutate(continent = case_when(\n    country %in% asia ~ \"Asia\",\n    country %in% europe ~ \"Europe\",\n    country %in% oceania ~ \"Oceania\",\n    country %in% america ~ \"America\",\n    country %in% africa ~ \"Africa\"))\n\n\ncorr <- corr %>%\n  group_by(continent, style) %>%\n  summarise(mean = mean(stars)) %>%\n  mutate_if(is.numeric, round, digits = 2)\n\n\ng <- ggplot(corr, aes(x = style, y = mean)) +\n  geom_col(fill = \"#EEC6A7\") +\n  geom_col(data = ~filter(.x, mean == max(mean)),\n           fill = \"#ea6834\") +\n  labs(x = \"Style\", y = \"Average Rating\") +\n  facet_wrap(~continent, ncol = 2)\n  \n\nggplotly(g)\n\n\n\n\nFigure 4: Most liked ramen styles across continents\n\n\n\nFrom Figure 4, it is quite obvious that different continent prefers different kinds of ramen styles, except for African region where ramen comes only in Pack. Asian people prefers ramen in a box, while Europeans and people from Australia and New Zealand likes ramen in a bowl. One interesting observation is the diversity of ramen styles in America continent, which is even more various than Asian countries. My hypothesis is that many people migrating from Asian countries to these areas also bring along their culture and perhaps, adjust the origin version to fit with the new culture. That’s why we have seen diverse ramen styles in these countries.\nTo summarise, in this blog, I have compared and contrasted the rating score across a variety of ramen brands, as well as explore how people from different continent favors ramen based on its styles."
+  },
+  {
+    "objectID": "posts/analysis/index.html#references",
+    "href": "posts/analysis/index.html#references",
+    "title": "Ramen Analysis",
+    "section": "References",
+    "text": "References\nC. Sievert. Interactive Web-Based Data Visualization with R, plotly, and shiny. Chapman and Hall/CRC Florida, 2020.\nH. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.\nHao Zhu (2021). kableExtra: Construct Complex Table with ‘kable’ and Pipe Syntax. R package version 1.3.4. https://CRAN.R-project.org/package=kableExtra\nNissin (n.d). Brands. Retrieved from https://www.nissin.com/en_jp/brands/\nTierney N (2017). “visdat: Visualising Whole Data Frames.” JOSS, 2(16), 355. doi: 10.21105/joss.00355 (URL: https://doi.org/10.21105/joss.00355), <URL: http://dx.doi.org/10.21105/joss.00355>.\nThe Ramen Rater (2022). Ramen Ratings[Dataset]. https://www.theramenrater.com/resources-2/the-list/\nWickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” Journal of Open Source Software, 4(43), 1686. doi: 10.21105/joss.01686 (URL: https://doi.org/10.21105/joss.01686).\nYihui Xie, Joe Cheng and Xianying Tan (2022). DT: A Wrapper of the JavaScript Library ‘DataTables’. R package version 0.24. https://CRAN.R-project.org/package=DT\n\n\n- Session info ---------------------------------------------------------------\n setting  value\n version  R version 4.1.2 (2021-11-01)\n os       Windows 10 x64 (build 19043)\n system   x86_64, mingw32\n ui       RTerm\n language (EN)\n collate  English_United States.1252\n ctype    English_United States.1252\n tz       Australia/Sydney\n date     2022-09-06\n pandoc   2.18 @ C:/Program Files/RStudio/bin/quarto/bin/tools/ (via rmarkdown)\n\n- Packages -------------------------------------------------------------------\n package       * version date (UTC) lib source\n assertthat      0.2.1   2019-03-21 [1] CRAN (R 4.1.3)\n backports       1.4.1   2021-12-13 [1] CRAN (R 4.1.2)\n bit             4.0.4   2020-08-04 [1] CRAN (R 4.1.2)\n bit64           4.0.5   2020-08-30 [1] CRAN (R 4.1.2)\n broom           0.7.12  2022-01-28 [1] CRAN (R 4.1.3)\n bslib           0.3.1   2021-10-06 [1] CRAN (R 4.1.3)\n cellranger      1.1.0   2016-07-27 [1] CRAN (R 4.1.2)\n cli             3.2.0   2022-02-14 [1] CRAN (R 4.1.2)\n colorspace      2.0-3   2022-02-21 [1] CRAN (R 4.1.2)\n crayon          1.5.0   2022-02-14 [1] CRAN (R 4.1.2)\n crosstalk       1.2.0   2021-11-04 [1] CRAN (R 4.1.3)\n curl            4.3.2   2021-06-23 [1] CRAN (R 4.1.2)\n data.table      1.14.2  2021-09-27 [1] CRAN (R 4.1.3)\n DBI             1.1.2   2021-12-20 [1] CRAN (R 4.1.3)\n dbplyr          2.1.1   2021-04-06 [1] CRAN (R 4.1.3)\n digest          0.6.29  2021-12-01 [1] CRAN (R 4.1.2)\n dplyr         * 1.0.8   2022-02-08 [1] CRAN (R 4.1.2)\n DT            * 0.24    2022-08-09 [1] CRAN (R 4.1.3)\n ellipsis        0.3.2   2021-04-29 [1] CRAN (R 4.1.2)\n evaluate        0.15    2022-02-18 [1] CRAN (R 4.1.2)\n fansi           1.0.2   2022-01-14 [1] CRAN (R 4.1.2)\n farver          2.1.0   2021-02-28 [1] CRAN (R 4.1.2)\n fastmap         1.1.0   2021-01-25 [1] CRAN (R 4.1.3)\n forcats       * 0.5.1   2021-01-27 [1] CRAN (R 4.1.3)\n fs              1.5.2   2021-12-08 [1] CRAN (R 4.1.2)\n gargle          1.2.0   2021-07-02 [1] CRAN (R 4.1.3)\n generics        0.1.2   2022-01-31 [1] CRAN (R 4.1.2)\n ggplot2       * 3.3.5   2021-06-25 [1] CRAN (R 4.1.2)\n glue            1.6.2   2022-02-24 [1] CRAN (R 4.1.2)\n googledrive     2.0.0   2021-07-08 [1] CRAN (R 4.1.3)\n googlesheets4   1.0.0   2021-07-21 [1] CRAN (R 4.1.3)\n gtable          0.3.0   2019-03-25 [1] CRAN (R 4.1.2)\n haven           2.5.0   2022-04-15 [1] CRAN (R 4.1.3)\n highr           0.9     2021-04-16 [1] CRAN (R 4.1.2)\n hms             1.1.1   2021-09-26 [1] CRAN (R 4.1.2)\n htmltools       0.5.2   2021-08-25 [1] CRAN (R 4.1.3)\n htmlwidgets     1.5.4   2021-09-08 [1] CRAN (R 4.1.3)\n httr            1.4.2   2020-07-20 [1] CRAN (R 4.1.2)\n jquerylib       0.1.4   2021-04-26 [1] CRAN (R 4.1.3)\n jsonlite        1.8.0   2022-02-22 [1] CRAN (R 4.1.3)\n kableExtra    * 1.3.4   2021-02-20 [1] CRAN (R 4.1.3)\n knitr           1.38    2022-03-25 [1] CRAN (R 4.1.3)\n labeling        0.4.2   2020-10-20 [1] CRAN (R 4.1.1)\n lazyeval        0.2.2   2019-03-15 [1] CRAN (R 4.1.3)\n lifecycle       1.0.1   2021-09-24 [1] CRAN (R 4.1.2)\n lubridate       1.8.0   2021-10-07 [1] CRAN (R 4.1.3)\n magrittr        2.0.2   2022-01-26 [1] CRAN (R 4.1.2)\n modelr          0.1.8   2020-05-19 [1] CRAN (R 4.1.3)\n munsell         0.5.0   2018-06-12 [1] CRAN (R 4.1.2)\n pillar          1.7.0   2022-02-01 [1] CRAN (R 4.1.2)\n pkgconfig       2.0.3   2019-09-22 [1] CRAN (R 4.1.2)\n plotly        * 4.10.0  2021-10-09 [1] CRAN (R 4.1.3)\n purrr         * 0.3.4   2020-04-17 [1] CRAN (R 4.1.2)\n R6              2.5.1   2021-08-19 [1] CRAN (R 4.1.2)\n readr         * 2.1.2   2022-01-30 [1] CRAN (R 4.1.2)\n readxl          1.4.0   2022-03-28 [1] CRAN (R 4.1.3)\n reprex          2.0.1   2021-08-05 [1] CRAN (R 4.1.3)\n rlang           1.0.1   2022-02-03 [1] CRAN (R 4.1.2)\n rmarkdown       2.14    2022-04-25 [1] CRAN (R 4.1.3)\n rstudioapi      0.13    2020-11-12 [1] CRAN (R 4.1.2)\n rvest           1.0.2   2021-10-16 [1] CRAN (R 4.1.3)\n sass            0.4.0   2021-05-12 [1] CRAN (R 4.1.3)\n scales          1.1.1   2020-05-11 [1] CRAN (R 4.1.2)\n sessioninfo     1.2.2   2021-12-06 [1] CRAN (R 4.1.3)\n stringi         1.7.6   2021-11-29 [1] CRAN (R 4.1.2)\n stringr       * 1.4.0   2019-02-10 [1] CRAN (R 4.1.2)\n svglite         2.1.0   2022-02-03 [1] CRAN (R 4.1.3)\n systemfonts     1.0.4   2022-02-11 [1] CRAN (R 4.1.3)\n tibble        * 3.1.6   2021-11-07 [1] CRAN (R 4.1.2)\n tidyr         * 1.2.0   2022-02-01 [1] CRAN (R 4.1.3)\n tidyselect      1.1.2   2022-02-21 [1] CRAN (R 4.1.2)\n tidyverse     * 1.3.2   2022-07-18 [1] CRAN (R 4.1.3)\n tzdb            0.2.0   2021-10-27 [1] CRAN (R 4.1.2)\n utf8            1.2.2   2021-07-24 [1] CRAN (R 4.1.2)\n vctrs           0.3.8   2021-04-29 [1] CRAN (R 4.1.2)\n viridisLite     0.4.0   2021-04-13 [1] CRAN (R 4.1.2)\n visdat        * 0.5.3   2019-02-15 [1] CRAN (R 4.1.3)\n vroom           1.5.7   2021-11-30 [1] CRAN (R 4.1.2)\n webshot         0.5.2   2019-11-22 [1] CRAN (R 4.1.3)\n withr           2.4.3   2021-11-30 [1] CRAN (R 4.1.2)\n xfun            0.31    2022-05-10 [1] CRAN (R 4.1.3)\n xml2            1.3.3   2021-11-30 [1] CRAN (R 4.1.2)\n yaml            2.3.5   2022-02-21 [1] CRAN (R 4.1.2)\n\n [1] C:/Users/trinh/OneDrive/Documents/R/win-library/4.1\n [2] C:/Program Files/R/R-4.1.2/library\n\n------------------------------------------------------------------------------"
   },
   {
     "objectID": "posts/welcome/index.html",
     "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog Template",
+    "title": "Welcome To My Blog",
     "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!"
-  },
-  {
-    "objectID": "posts/week02/index.html",
-    "href": "posts/week02/index.html",
-    "title": "Introduction to web technologies",
-    "section": "",
-    "text": "Understand the make up of web documents, i.e. HTML, CSS and JS\nWrite basic HTML and CSS with valid syntax\nUse CSS selectors to apply new styles\nIntegrate CSS and JS to R markdown documents with HTML output"
-  },
-  {
-    "objectID": "posts/week02/index.html#slides",
-    "href": "posts/week02/index.html#slides",
-    "title": "Introduction to web technologies",
-    "section": "Slides",
-    "text": "Slides"
-  },
-  {
-    "objectID": "posts/week03/index.html",
-    "href": "posts/week03/index.html",
-    "title": "Communicating data with interactive web apps",
-    "section": "",
-    "text": "Use interactivity to enable data exploration, understanding and communication\nDesign web apps with displays that fit for the purpose\nMake web applications using shiny"
-  },
-  {
-    "objectID": "posts/week03/index.html#analysis",
-    "href": "posts/week03/index.html#analysis",
-    "title": "Communicating data with interactive web apps",
-    "section": "Analysis",
-    "text": "Analysis\n\nlibrary(tidyverse)\nlibrary(tidycovid19)\ndf <- download_merged_data(cached = TRUE, silent = TRUE)\n\n\ng <- df %>% \n  filter(country == \"Australia\") %>% \n  mutate(cases_new = diff(c(0, confirmed))) %>% \n  filter(between(date, as.Date(\"2022-03-01\"), as.Date(\"2022-08-30\"))) %>% \n  ggplot(aes(date, cases_new)) +\n  geom_line() +\n  labs(x = \"Date\", y = \"New COVID-19 Cases\",\n       title = \"Australia\") +\n  theme_classic(base_size = 14)\n\nplotly::ggplotly(g)"
+    "text": "Welcome to My Blog! This is an exploration of ramen ratings on a global scale."
   },
   {
     "objectID": "index.html",
     "href": "index.html",
     "title": "ETC5523 Blog Assessment",
     "section": "",
-    "text": "lecture\n\n\n\n\n\n\n\n\n\n\n\nAug 8, 2022\n\n\nEmi Tanaka\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n\n\nlecture\n\n\n\n\n\n\n\n\n\n\n\nAug 1, 2022\n\n\nEmi Tanaka\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n\n\nlecture\n\n\n\n\n\n\n\n\n\n\n\nJul 25, 2022\n\n\nEmi Tanaka\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nJul 18, 2022\n\n\nEmi Tanaka\n\n\n\n\n\n\nNo matching items"
+    "text": "News\n\n\n\n\n\n\n\n\n\n\n\nSep 2, 2022\n\n\nPhuong Thanh Trinh\n\n\n0 min\n\n\n\n\n\n\n  \n\n\n\n\n\n\n\n\n\n\nAnalysis\n\n\n\n\n\n\n\n\n\n\n\nSep 6, 2022\n\n\nPhuong Thanh Trinh\n\n\n8 min\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "This is a blog template for the ETC5523 Communicating with Data assessment at Monash University."
+    "text": "Phuong Thanh Trinh"
+  },
+  {
+    "objectID": "about.html#education",
+    "href": "about.html#education",
+    "title": "About",
+    "section": "Education",
+    "text": "Education\nMonash University | Melbourne, Victoria\nMaster of Business Analytics | February 2022 - December 2023"
+  },
+  {
+    "objectID": "about.html#about-the-blog",
+    "href": "about.html#about-the-blog",
+    "title": "About",
+    "section": "About the blog",
+    "text": "About the blog\nThis is a blog exploring the Ramen Ratings dataset for the ETC5523 Communicating with Data assessment at Monash University."
   }
 ]
